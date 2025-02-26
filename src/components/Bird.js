@@ -263,13 +263,19 @@ const Bird = ({ memory, onClick }) => {
             />
           </mesh>
           
-          {/* Photo */}
+          {/* Photo - Front side */}
           <mesh position={[0, 0, 0.06]} rotation={[0, 0, 0]} scale={[0.6, 0.6, 0.01]}>
             <planeGeometry args={[1, 1]} />
             <meshBasicMaterial map={texture} transparent={true} side={DoubleSide} />
           </mesh>
           
-          {/* Frame border */}
+          {/* Photo - Back side */}
+          <mesh position={[0, 0, -0.06]} rotation={[0, Math.PI, 0]} scale={[0.6, 0.6, 0.01]}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial map={texture} transparent={true} side={DoubleSide} />
+          </mesh>
+          
+          {/* Frame border - Front side */}
           <mesh position={[0, 0, 0.07]} rotation={[0, 0, 0]} scale={[0.65, 0.65, 0.01]}>
             <ringGeometry args={[0.85, 1, 32]} />
             <meshStandardMaterial 
@@ -280,8 +286,31 @@ const Bird = ({ memory, onClick }) => {
             />
           </mesh>
           
-          {/* Frame glow */}
+          {/* Frame border - Back side */}
+          <mesh position={[0, 0, -0.07]} rotation={[0, Math.PI, 0]} scale={[0.65, 0.65, 0.01]}>
+            <ringGeometry args={[0.85, 1, 32]} />
+            <meshStandardMaterial 
+              color={new Color(birdColor).multiplyScalar(1.4)} 
+              emissive={birdColor} 
+              emissiveIntensity={2.0}
+              side={DoubleSide}
+            />
+          </mesh>
+          
+          {/* Frame glow - Front side */}
           <mesh position={[0, 0, 0.08]} rotation={[0, 0, 0]} scale={[0.7, 0.7, 0.01]}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial 
+              color="#ffffff" 
+              transparent={true} 
+              opacity={0.4} 
+              blending={AdditiveBlending} 
+              side={DoubleSide} 
+            />
+          </mesh>
+          
+          {/* Frame glow - Back side */}
+          <mesh position={[0, 0, -0.08]} rotation={[0, Math.PI, 0]} scale={[0.7, 0.7, 0.01]}>
             <planeGeometry args={[1, 1]} />
             <meshBasicMaterial 
               color="#ffffff" 
