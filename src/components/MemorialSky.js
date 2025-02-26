@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Sky, Stars } from '@react-three/drei';
+import { OrbitControls, Sky, Stars, Cloud } from '@react-three/drei';
 import { Link } from 'react-router-dom';
 import { useDatabase } from './DatabaseProvider';
 import Bird from './Bird';
@@ -9,109 +9,87 @@ import MemoryModal from './MemoryModal';
 // Sky theme definitions
 const skyThemes = {
   sunset: {
-    name: "Peaceful Sunset",
-    description: "A serene pink and purple sunset sky, symbolizing the beautiful end of a journey.",
+    name: "Purple Sunset",
+    description: "A dreamlike sunset with vibrant pink and purple hues painting the sky in a stunning display of color.",
+    color: "#ff00ff",
     sky: {
       distance: 450000,
-      sunPosition: [0, 0.05, -1],
-      inclination: 0.1,
+      sunPosition: [0, 0.01, -1],
+      inclination: 0.05,
       azimuth: 0.25,
-      turbidity: 10,
-      rayleigh: 3,
-      mieCoefficient: 0.005,
-      mieDirectionalG: 0.75
+      turbidity: 3,
+      rayleigh: 0.5,
+      mieCoefficient: 0.001,
+      mieDirectionalG: 0.999
     },
     lights: [
-      { type: 'ambient', intensity: 0.4, color: "#ffd6e0" },
-      { type: 'directional', position: [0, 0.05, -1], intensity: 1.2, color: "#ff9e7a" },
-      { type: 'directional', position: [-5, 5, -2], intensity: 0.3, color: "#9370db" }
+      { type: 'ambient', intensity: 1.0, color: "#ffffff" },
+      { type: 'directional', position: [0, 0.1, -1], intensity: 4.0, color: "#ff3366" },
+      { type: 'directional', position: [-3, 0.5, -1], intensity: 3.0, color: "#cc33ff" },
+      { type: 'directional', position: [3, 0.2, -1], intensity: 2.5, color: "#ff9966" },
+      { type: 'directional', position: [0, -0.5, 0.5], intensity: 2.0, color: "#9900cc" }
     ],
-    fog: { color: "#e0a0c0", near: 20, far: 100 },
-    stars: { visible: true, count: 1000, opacity: 0.3 }
+    fog: { color: "#ff6699", near: 35, far: 120 },
+    stars: { visible: true, count: 2000, opacity: 0.5 },
+    clouds: [
+      { position: [0, 0, -15], opacity: 0.7, speed: 0.05, width: 22, depth: 2, segments: 22, color: "#ffdddd" },
+      { position: [-15, 5, -18], opacity: 0.5, speed: 0.08, width: 18, depth: 1.5, segments: 18, color: "#ffe0e0" },
+      { position: [12, -4, -15], opacity: 0.6, speed: 0.04, width: 15, depth: 1, segments: 15, color: "#ffd6e0" }
+    ]
   },
-  night: {
-    name: "Starry Night",
-    description: "A deep blue night sky filled with stars, representing eternal peace and the infinite beyond.",
+  galaxy: {
+    name: "Cosmic Galaxy",
+    description: "A breathtaking view of a distant galaxy with vibrant nebulae and cosmic dust, representing the vastness of eternity.",
+    color: "#000000",
     sky: {
       distance: 450000,
       sunPosition: [0, -0.5, 0],
       inclination: 0,
       azimuth: 0.25,
-      turbidity: 10,
-      rayleigh: 5,
-      mieCoefficient: 0.005,
-      mieDirectionalG: 0.8
+      turbidity: 0.5,
+      rayleigh: 0.01,
+      mieCoefficient: 0.0001,
+      mieDirectionalG: 0.999
     },
     lights: [
-      { type: 'ambient', intensity: 0.1, color: "#0a1a3f" },
-      { type: 'directional', position: [0, 10, 0], intensity: 0.08, color: "#b0c8ff" },
-      { type: 'directional', position: [-5, 5, -2], intensity: 0.04, color: "#6a82fb" }
+      { type: 'ambient', intensity: 0.8, color: "#ffffff" },
+      { type: 'directional', position: [5, 3, 2], intensity: 1.5, color: "#ff00ff" },
+      { type: 'directional', position: [-5, 2, -2], intensity: 1.2, color: "#00ffff" },
+      { type: 'directional', position: [0, -3, 5], intensity: 1.0, color: "#ffff00" },
+      { type: 'directional', position: [-3, -1, -3], intensity: 0.8, color: "#ff3300" },
+      { type: 'directional', position: [4, 0, 4], intensity: 0.6, color: "#00ff66" }
     ],
-    fog: { color: "#070b18", near: 25, far: 90 },
-    stars: { visible: true, count: 8000, opacity: 1 }
+    fog: { color: "#000000", near: 20, far: 100 },
+    stars: { visible: true, count: 30000, opacity: 1 },
+    clouds: []
   },
-  dawn: {
-    name: "New Dawn",
-    description: "A hopeful golden sunrise, symbolizing new beginnings and the light that remains after loss.",
+  paradise: {
+    name: "Tropical Paradise",
+    description: "A vivid turquoise and gold sky reminiscent of tropical waters and sunsets, celebrating life's most beautiful moments.",
+    color: "#00ffff",
     sky: {
       distance: 450000,
-      sunPosition: [0, 0.1, 1],
-      inclination: 0.2,
+      sunPosition: [0, 0.3, -0.8],
+      inclination: 0.3,
       azimuth: 0.25,
-      turbidity: 6,
-      rayleigh: 2,
-      mieCoefficient: 0.005,
-      mieDirectionalG: 0.82
+      turbidity: 1,
+      rayleigh: 0.05,
+      mieCoefficient: 0.0005,
+      mieDirectionalG: 0.999
     },
     lights: [
-      { type: 'ambient', intensity: 0.4, color: "#fff1d6" },
-      { type: 'directional', position: [0, 0.1, 1], intensity: 1.5, color: "#ffa530" },
-      { type: 'directional', position: [-5, 5, -2], intensity: 0.3, color: "#ffecd2" }
+      { type: 'ambient', intensity: 1.2, color: "#ffffff" },
+      { type: 'directional', position: [1, 1, -1], intensity: 3.0, color: "#ff9f1c" },
+      { type: 'directional', position: [-1, 0.5, 0], intensity: 2.0, color: "#00ffcc" },
+      { type: 'directional', position: [0, -0.5, 1], intensity: 1.5, color: "#ff5500" },
+      { type: 'directional', position: [2, 0, -2], intensity: 1.0, color: "#ffcc00" }
     ],
-    fog: { color: "#ffcb8c", near: 30, far: 120 },
-    stars: { visible: false, count: 0, opacity: 0 }
-  },
-  ethereal: {
-    name: "Ethereal Realm",
-    description: "A mystical teal and violet sky, representing the spiritual realm where souls find peace.",
-    sky: {
-      distance: 450000,
-      sunPosition: [0, 0.3, 0],
-      inclination: 0.4,
-      azimuth: 0.25,
-      turbidity: 4,
-      rayleigh: 2,
-      mieCoefficient: 0.01,
-      mieDirectionalG: 0.85
-    },
-    lights: [
-      { type: 'ambient', intensity: 0.35, color: "#7F7FD5" },
-      { type: 'directional', position: [5, 10, 5], intensity: 0.8, color: "#91EAE4" },
-      { type: 'directional', position: [-5, 5, -2], intensity: 0.4, color: "#86A8E7" }
-    ],
-    fog: { color: "#614385", near: 15, far: 100 },
-    stars: { visible: true, count: 3000, opacity: 0.6 }
-  },
-  daylight: {
-    name: "Clear Daylight",
-    description: "A bright blue sky with gentle clouds, representing clarity, truth and the enduring light of memory.",
-    sky: {
-      distance: 450000,
-      sunPosition: [1, 1, 0],
-      inclination: 0.6,
-      azimuth: 0.1,
-      turbidity: 8,
-      rayleigh: 1,
-      mieCoefficient: 0.003,
-      mieDirectionalG: 0.8
-    },
-    lights: [
-      { type: 'ambient', intensity: 0.5, color: "#e2eeff" },
-      { type: 'directional', position: [1, 1, 0], intensity: 1.2, color: "#ffffff" },
-      { type: 'directional', position: [-1, 0.5, 0.2], intensity: 0.3, color: "#b3d9ff" }
-    ],
-    fog: { color: "#e2eeff", near: 50, far: 150 },
-    stars: { visible: false, count: 0, opacity: 0 }
+    fog: { color: "#80e5e5", near: 40, far: 120 },
+    stars: { visible: false, count: 0, opacity: 0 },
+    clouds: [
+      { position: [0, 5, -15], opacity: 0.6, speed: 0.3, width: 28, depth: 2, segments: 25, color: "#ffeecc" },
+      { position: [-18, 0, -12], opacity: 0.7, speed: 0.2, width: 18, depth: 1, segments: 16, color: "#ffddaa" }
+    ]
   }
 };
 
@@ -195,6 +173,20 @@ const MemorialSky = () => {
           mieDirectionalG={activeTheme.sky.mieDirectionalG}
         />
         
+        {/* Clouds based on active theme */}
+        {activeTheme.clouds && activeTheme.clouds.map((cloud, index) => (
+          <Cloud 
+            key={`cloud-${index}`}
+            position={cloud.position}
+            opacity={cloud.opacity}
+            speed={cloud.speed}
+            width={cloud.width}
+            depth={cloud.depth}
+            segments={cloud.segments}
+            color={cloud.color}
+          />
+        ))}
+        
         {/* Stars based on active theme */}
         {activeTheme.stars.visible && (
           <Stars 
@@ -271,8 +263,23 @@ const MemorialSky = () => {
                   className={`theme-option ${currentTheme === key ? 'active' : ''}`}
                   onClick={() => changeTheme(key)}
                 >
-                  <h4>{theme.name}</h4>
-                  <p>{theme.description}</p>
+                  <div className="theme-preview-container">
+                    <div 
+                      className="theme-color-preview" 
+                      style={{ 
+                        background: `linear-gradient(to right, ${theme.color}, ${theme.lights[0].color})`,
+                        boxShadow: theme.stars.visible ? `0 0 10px 1px ${theme.lights[1]?.color || '#ffffff'}` : 'none'
+                      }}
+                    >
+                      {theme.stars.visible && (
+                        <div className="theme-stars-preview"></div>
+                      )}
+                    </div>
+                    <div className="theme-info">
+                      <h4>{theme.name}</h4>
+                      <p>{theme.description}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
